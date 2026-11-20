@@ -9,7 +9,7 @@ Weekly Wrap reads your vault and writes a note listing what you got done: tasks 
 - **Ticked tasks** with a Tasks plugin done date (`✅ 2026-11-20`), anywhere in your vault.
 - **Notes** you created or edited that week.
 
-More is on the way: a Friday nudge, and extra sections for Focus logs, habits and mood.
+More is on the way: extra sections for Focus logs, habits and mood.
 
 ## Use it
 
@@ -17,11 +17,17 @@ More is on the way: a Friday nudge, and extra sections for Focus logs, habits an
 - **Last week** and **Next week** step through earlier wraps. **Open this week so far** shows the week in progress.
 - Each wrap you open is also saved as a note, `Wraps/2026-W47.md`, so the record stays in your vault. **Open note** takes you there. Write anything you like under **Worth keeping**: re-running the week updates the counts and leaves your words alone.
 
+## The Friday nudge
+
+From 3 pm on your wrap day, a small notice says your week's wrapped, with **Have a look** and **Later**. Nothing opens by itself. Until you open it, a dot sits on the ribbon icon. Missed Friday? It nudges the next time you open Obsidian.
+
 ## Settings
 
 | Setting | Default |
 | --- | --- |
 | Wrap day | Friday |
+| Friday nudge | On |
+| Nudge from | 15:00 |
 | Wrap folder | `Wraps` |
 | Folders to leave out | `Templates` |
 | Task filter | blank (every tick counts) |
