@@ -1,0 +1,23 @@
+{
+  "name": "weekly-wrap",
+  "version": "0.1.0",
+  "description": "Every Friday, a page of what you actually did this week.",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc --noEmit && node esbuild.config.mjs production",
+    "test": "vitest run"
+  },
+  "keywords": ["obsidian", "weekly review", "adhd"],
+  "author": "Tom Lowndes",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "22.15.0",
+    "builtin-modules": "3.3.0",
+    "esbuild": "0.25.0",
+    "obsidian": "1.8.7",
+    "tslib": "2.8.1",
+    "typescript": "5.8.3",
+    "vitest": "3.2.4"
+  }
+}
