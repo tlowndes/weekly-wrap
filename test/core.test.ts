@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { cards } from "../src/core/cards";
+import { check, dueWeek, EMPTY_NUDGE } from "../src/core/nudge";
 import { isoWeek, rangeLabel, startOfDayMs } from "../src/core/dates";
 import { END, newNote, shortVersion, START, updateNote } from "../src/core/note";
 import { cleanText, doneIn } from "../src/core/tasks";
@@ -156,5 +157,34 @@ describe("card view", () => {
 		expect(c.headline).toBe("A quiet one");
 		expect(c.highlight).toBeNull();
 		expect(c.days.every((d) => d.level === 0)).toBe(true);
+	});
+});
+
+describe("Friday nudge", () => {
+	const opts = { wrapDay: 5, fromHour: 15, enabled: true, installed: "2026-11-01" };
+
+	it("waits until the set time on the wrap day", () => {
+		expect(dueWeek("2026-11-20", 14, 5, 15).to).toBe("2026-11-13");
+		expect(dueWeek("2026-11-20", 15, 5, 15).to).toBe("2026-11-20");
+		expect(dueWeek("2026-11-24", 9, 5, 15).to).toBe("2026-11-20");
+	});
+
+	it("shows the notice once and keeps the dot until opened", () => {
+		const first = check(EMPTY_NUDGE, "2026-11-20", 16, opts);
+		expect([first.week.label, first.notice, first.dot]).toEqual(["2026-W47", true, true]);
+		const later = check({ lastOpened: "", lastNudged: "2026-W47" }, "2026-11-21", 10, opts);
+		expect([later.notice, later.dot]).toEqual([false, true]);
+		const opened = check({ lastOpened: "2026-W47", lastNudged: "2026-W47" }, "2026-11-22", 10, opts);
+		expect([opened.notice, opened.dot]).toEqual([false, false]);
+	});
+
+	it("catches up after a missed Friday", () => {
+		const c = check({ lastOpened: "2026-W46", lastNudged: "2026-W46" }, "2026-11-23", 8, opts);
+		expect([c.week.label, c.notice]).toEqual(["2026-W47", true]);
+	});
+
+	it("stays quiet when turned off or before it was installed", () => {
+		expect(check(EMPTY_NUDGE, "2026-11-20", 16, { ...opts, enabled: false }).notice).toBe(false);
+		expect(check(EMPTY_NUDGE, "2026-11-20", 16, { ...opts, installed: "2026-11-21" }).dot).toBe(false);
 	});
 });
