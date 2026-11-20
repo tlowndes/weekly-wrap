@@ -9,13 +9,13 @@ Weekly Wrap reads your vault and writes a note listing what you got done: tasks 
 - **Ticked tasks** with a Tasks plugin done date (`✅ 2026-11-20`), anywhere in your vault.
 - **Notes** you created or edited that week.
 
-More is on the way: a card view, a Friday nudge, and extra sections for Focus logs, habits and mood.
+More is on the way: a Friday nudge, and extra sections for Focus logs, habits and mood.
 
 ## Use it
 
-- Click the calendar tick icon in the ribbon, or run **Weekly Wrap: Open the latest wrap**.
-- **Open this week so far** shows the week in progress.
-- Each wrap is saved as `Wraps/2026-W47.md`. Write anything you like under **Worth keeping**: re-running the week updates the counts and leaves your words alone.
+- Click the calendar tick icon in the ribbon, or run **Weekly Wrap: Open the latest wrap**. Your week opens as cards: a headline, your counts, a day-by-day strip, what you're proud of and your best day.
+- **Last week** and **Next week** step through earlier wraps. **Open this week so far** shows the week in progress.
+- Each wrap you open is also saved as a note, `Wraps/2026-W47.md`, so the record stays in your vault. **Open note** takes you there. Write anything you like under **Worth keeping**: re-running the week updates the counts and leaves your words alone.
 
 ## Settings
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { cards } from "../src/core/cards";
 import { isoWeek, rangeLabel, startOfDayMs } from "../src/core/dates";
 import { END, newNote, shortVersion, START, updateNote } from "../src/core/note";
 import { cleanText, doneIn } from "../src/core/tasks";
@@ -121,5 +122,39 @@ describe("building a wrap", () => {
 		expect(again).toContain("1 task ticked");
 		expect(again.split(START)).toHaveLength(2);
 		expect(again.split(END)).toHaveLength(2);
+	});
+});
+
+describe("card view", () => {
+	const week = weekFor("2026-11-20");
+	const at = (day: string) => startOfDayMs(day) + 12 * 3600000;
+	const notes: NoteInfo[] = [{ path: "Tasks.md", ctime: at("2026-10-01"), mtime: at("2026-11-20") }];
+	const text = [
+		"- [x] One ✅ 2026-11-16",
+		"- [x] Two ✅ 2026-11-19",
+		"- [x] Three ✅ 2026-11-19",
+		"- [x] Four ✅ 2026-11-19",
+		"- [x] Five ✅ 2026-11-20",
+	].join("\n");
+
+	it("turns a wrap into a headline, stats, a day strip and a highlight", async () => {
+		const w = await buildWrap(notes, async () => text, week);
+		const c = cards(w);
+		expect(c.kicker).toBe("Week 47");
+		expect(c.headline).toBe("You got 5 things done");
+		expect(c.stats.map((s) => s.value)).toEqual(["5", "1", "0"]);
+		expect(c.days.map((d) => d.level)).toEqual([0, 0, 1, 0, 0, 4, 1]);
+		expect(c.days.find((d) => d.best)?.name).toBe("Thu");
+		expect(c.proud).toHaveLength(3);
+		expect(c.proud[0]).toBe("Five");
+		expect(c.more).toBe(2);
+		expect(c.highlight?.title).toBe("Thursday was your big one");
+	});
+
+	it("stays gentle with nothing ticked", async () => {
+		const c = cards(await buildWrap([], async () => "", week));
+		expect(c.headline).toBe("A quiet one");
+		expect(c.highlight).toBeNull();
+		expect(c.days.every((d) => d.level === 0)).toBe(true);
 	});
 });
