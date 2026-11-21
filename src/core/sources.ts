@@ -136,6 +136,8 @@ export interface VaultAccess {
 	/** Every markdown note, with its times. */
 	notes: { path: string; ctime: number }[];
 	read(path: string): Promise<string>;
+	/** Whether a note is at [path], looked up directly rather than by walking every file. */
+	exists(path: string): boolean;
 }
 
 const under = (path: string, folder: string) => path.startsWith(folder.replace(/\/+$/, "") + "/");
@@ -148,7 +150,7 @@ export async function gatherExtras(
 	localDay: (ms: number) => Day,
 ): Promise<Extras> {
 	const out: Extras = {};
-	const has = (p: string) => v.notes.some((n) => n.path === p);
+	const has = (p: string) => v.exists(p);
 	const safe = async (p: string) => {
 		try {
 			return await v.read(p);

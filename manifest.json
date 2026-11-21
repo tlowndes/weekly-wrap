@@ -1,10 +1,10 @@
 {
-  "id": "weekly-wrap",
-  "name": "Weekly Wrap",
-  "version": "0.1.0",
-  "minAppVersion": "1.5.0",
-  "description": "Every Friday, a page of what you actually did this week. Built for the \"I did nothing\" feeling.",
-  "author": "Tom Lowndes",
-  "authorUrl": "https://tomlowndes.co.uk",
-  "isDesktopOnly": false
+	"id": "weekly-wrap",
+	"name": "Weekly Wrap",
+	"version": "1.0.0",
+	"minAppVersion": "1.5.0",
+	"description": "See what you actually did this week. Every Friday, get a page of the tasks you ticked, the notes you made and your best day, built for weeks that feel like nothing happened.",
+	"author": "Tom Lowndes",
+	"authorUrl": "https://tomlowndes.co.uk",
+	"isDesktopOnly": false
 }

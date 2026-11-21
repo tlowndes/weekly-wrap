@@ -60,12 +60,18 @@ export function cards(w: Wrap, top = 3): Cards {
 	if (x.applications) stats.push({ value: String(x.applications), label: x.applications === 1 ? "application" : "applications" });
 	else if (stats.length < 4) stats.push({ value: String(w.notesCreated), label: w.notesCreated === 1 ? "new note" : "new notes" });
 
+	// Never show a zero in a stat card; tasks stay, even at 0, so the row is never empty.
+	const shown = stats.filter((st, i) => i === 0 || st.value !== "0");
+	stats.length = 0;
+	stats.push(...shown);
+
 	const max = Math.max(0, ...w.perDay.map((d) => d.tasks));
-	const bestShown = w.tone.highlight && w.best !== null && n > 1;
+	const bestShown = w.tone.highlight && !quiet && w.best !== null;
 	const days = w.perDay.map((d) => ({
 		day: d.day,
 		name: shortDay(d.day),
-		detail: plural(d.tasks, "task"),
+		// A day with nothing ticked is left blank rather than labelled 0.
+		detail: d.tasks ? plural(d.tasks, "task") : "",
 		level: max === 0 || d.tasks === 0 ? 0 : Math.max(1, Math.round((d.tasks / max) * 4)),
 		best: bestShown && d.day === w.best!.day,
 	}));
