@@ -1,5 +1,6 @@
 import { longDay, rangeLabel, shortDay } from "./dates";
 import { Wrap } from "./wrap";
+import { careLines, hours, plural } from "./words";
 
 export interface Stat {
 	value: string;
@@ -27,10 +28,11 @@ export interface Cards {
 	/** Up to [top] task names for "Proud of", newest first, and how many more there are. */
 	proud: string[];
 	more: number;
+	/** "Looked after yourself" lines from Flight Deck's habits, water and Did I?. Empty = no card. */
+	care: string[];
 	highlight: { title: string; body: string } | null;
 }
 
-const plural = (n: number, one: string, many = one + "s") => `${n} ${n === 1 ? one : many}`;
 
 /** Everything the card view shows, worked out from a wrap so the view only draws it. */
 export function cards(w: Wrap, top = 3): Cards {
@@ -39,11 +41,12 @@ export function cards(w: Wrap, top = 3): Cards {
 	const headline =
 		n > 0 ? `You got ${plural(n, "thing")} done` : touched > 0 ? `You touched ${plural(touched, "note")}` : "A quiet one";
 
-	const stats: Stat[] = [
-		{ value: String(n), label: n === 1 ? "task ticked" : "tasks ticked" },
-		{ value: String(touched), label: touched === 1 ? "note touched" : "notes touched" },
-		{ value: String(w.notesCreated), label: w.notesCreated === 1 ? "new note" : "new notes" },
-	];
+	const x = w.extras;
+	const stats: Stat[] = [{ value: String(n), label: n === 1 ? "task ticked" : "tasks ticked" }];
+	if (x.focus) stats.push({ value: hours(x.focus.minutes), label: "of focus" });
+	stats.push({ value: String(touched), label: touched === 1 ? "note touched" : "notes touched" });
+	if (x.applications) stats.push({ value: String(x.applications), label: x.applications === 1 ? "application" : "applications" });
+	else if (stats.length < 4) stats.push({ value: String(w.notesCreated), label: w.notesCreated === 1 ? "new note" : "new notes" });
 
 	const max = Math.max(0, ...w.perDay.map((d) => d.tasks));
 	const bestShown = w.best !== null && n > 1;
@@ -61,7 +64,9 @@ export function cards(w: Wrap, top = 3): Cards {
 	const highlight = bestShown
 		? {
 				title: `${longDay(w.best!.day)} was your big one`,
-				body: `${plural(w.best!.tasks, "task")} ticked, the most of any day this week.`,
+				body:
+					`${plural(w.best!.tasks, "task")} ticked, the most of any day this week.` +
+					(x.moodBest === w.best!.day ? " Your mood was highest that day too." : ""),
 			}
 		: null;
 
@@ -73,6 +78,7 @@ export function cards(w: Wrap, top = 3): Cards {
 		days,
 		proud,
 		more: Math.max(0, n - proud.length),
+		care: careLines(x),
 		highlight,
 	};
 }

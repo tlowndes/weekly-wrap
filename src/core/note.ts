@@ -1,5 +1,6 @@
 import { longDay, rangeLabel, shortDay } from "./dates";
 import { Wrap } from "./wrap";
+import { alsoCounted } from "./words";
 
 /** The saved note's generated part sits between these, so re-running a week never touches the user's words. */
 export const START = "%% weekly-wrap:start %%";
@@ -47,7 +48,9 @@ export function generated(w: Wrap): string {
 	const made: string[] = [];
 	if (w.notesCreated) made.push(`${plural(w.notesCreated, "new note")}`);
 	if (w.notesEdited) made.push(`${plural(w.notesEdited, "note")} edited`);
-	if (made.length) lines.push("## Also counted", "", `- Made: ${made.join(", ")}.`, "");
+	const also = [...alsoCounted(w.extras)];
+	if (made.length) also.push(`Made: ${made.join(", ")}.`);
+	if (also.length) lines.push("## Also counted", "", ...also.map((l) => `- ${l}`), "");
 
 	return lines.join("\n").trimEnd();
 }
