@@ -147,7 +147,7 @@ describe("card view", () => {
 		const c = cards(w);
 		expect(c.kicker).toBe("Week 47");
 		expect(c.headline).toBe("You got 5 things done");
-		expect(c.stats.map((s) => s.value)).toEqual(["5", "1", "0"]);
+		expect(c.stats.map((s) => s.value)).toEqual(["5", "1"]);
 		expect(c.days.map((d) => d.level)).toEqual([0, 0, 1, 0, 0, 4, 1]);
 		expect(c.days.find((d) => d.best)?.name).toBe("Thu");
 		expect(c.proud).toHaveLength(3);
@@ -248,7 +248,7 @@ describe("Flight Deck sources", () => {
 		const notes = Object.keys(files).map((path) => ({ path, ctime: at("2026-11-18"), mtime: at("2026-11-19") }));
 		const read = async (p: string) => files[p];
 		const w = await buildWrap(notes, read, week);
-		w.extras = await gatherExtras({ notes, read }, week, FLIGHT_DECK, localDay);
+		w.extras = await gatherExtras({ notes, read, exists: (p) => p in files }, week, FLIGHT_DECK, localDay);
 		expect(w.extras).toEqual({
 			focus: { sessions: 1, minutes: 50, longest: { task: "Portfolio", minutes: 50 } },
 			didI: 1,

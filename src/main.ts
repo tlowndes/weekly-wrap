@@ -169,7 +169,7 @@ export default class WeeklyWrapPlugin extends Plugin {
 	async buildAndSave(week: Week): Promise<Wrap> {
 		const vault = this.app.vault;
 		const folder = this.folder();
-		const ignore = [folder, ...this.settings.ignore.split(",").map((s) => s.trim()).filter(Boolean)];
+		const ignore = [folder, ...this.settings.ignore.split(",").map((s) => s.trim()).filter(Boolean).map(normalizePath)];
 		const notes: NoteInfo[] = vault.getMarkdownFiles().map((f) => ({ path: f.path, ctime: f.stat.ctime, mtime: f.stat.mtime }));
 		const read = async (path: string) => {
 			const f = vault.getAbstractFileByPath(path);
@@ -182,7 +182,10 @@ export default class WeeklyWrapPlugin extends Plugin {
 			week,
 			{ ignore, countUndated: this.settings.countUndated, taskFilter: this.settings.taskFilter.trim() },
 		);
-		wrap.extras = await gatherExtras({ notes, read }, week, this.settings.sources, localDay);
+		const sources = { ...this.settings.sources };
+		for (const k of Object.keys(sources) as (keyof Sources)[]) sources[k] = { ...sources[k], path: normalizePath(sources[k].path) };
+		const exists = (path: string) => vault.getAbstractFileByPath(path) instanceof TFile;
+		wrap.extras = await gatherExtras({ notes, read, exists }, week, sources, localDay);
 		const opts = { ignore, countUndated: false, taskFilter: this.settings.taskFilter.trim() };
 		const quiet = isQuiet(wrap.tasks.length, await history(notes, read, week, opts));
 		wrap.tone = {
@@ -234,7 +237,7 @@ class WrapSettingTab extends PluginSettingTab {
 			});
 
 		new Setting(containerEl)
-			.setName("Friday nudge")
+			.setName("Nudge when the wrap is ready")
 			.setDesc("A small notice when your wrap is ready. Nothing opens by itself.")
 			.addToggle((t) =>
 				t.setValue(s.nudge).onChange(async (v) => {

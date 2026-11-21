@@ -30,7 +30,7 @@ export interface Wrap {
 	week: Week;
 	tasks: DoneTask[];
 	perDay: DayCount[];
-	/** The day with the most ticks, if any were ticked. */
+	/** The day with the most ticks, when one day clearly stands out. */
 	best: DayCount | null;
 	notesEdited: number;
 	notesCreated: number;
@@ -98,5 +98,7 @@ export async function buildWrap(
 
 	const perDay = week.days.map((day) => ({ day, tasks: tasks.filter((t) => t.done === day).length }));
 	const top = perDay.reduce<DayCount | null>((b, d) => (d.tasks > (b?.tasks ?? 0) ? d : b), null);
-	return { week, tasks, perDay, best: top, notesEdited, notesCreated, extras: {}, tone: { ...PLAIN_TONE } };
+	// A best day has to stand out: at least 2 ticks and no other day level with it.
+	const best = top && top.tasks >= 2 && perDay.filter((d) => d.tasks === top.tasks).length === 1 ? top : null;
+	return { week, tasks, perDay, best, notesEdited, notesCreated, extras: {}, tone: { ...PLAIN_TONE } };
 }
