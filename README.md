@@ -27,6 +27,10 @@ Each path can be changed or switched off in settings, and anything not found is 
 - **Last week** and **Next week** step through earlier wraps. **Open this week so far** shows the week in progress.
 - Each wrap you open is also saved as a note, `Wraps/2026-W47.md`, so the record stays in your vault. **Open note** takes you there. Write anything you like under **Worth keeping**: re-running the week updates the counts and leaves your words alone.
 
+## Lighter weeks
+
+When a week has under half your usual ticks (worked out over your last 4 weeks), the wrap leads with a kind line, such as "Rest weeks count too. Here's what still happened.", and puts the small stuff first: notes changed, focus, water, Did I? checks. It never shows a comparison or says what didn't happen. The kind lines are yours to edit in settings.
+
 ## The Friday nudge
 
 From 3 pm on your wrap day, a small notice says your week's wrapped, with **Have a look** and **Later**. Nothing opens by itself. Until you open it, a dot sits on the ribbon icon. Missed Friday? It nudges the next time you open Obsidian.
@@ -42,6 +46,8 @@ From 3 pm on your wrap day, a small notice says your week's wrapped, with **Have
 | Folders to leave out | `Templates` |
 | Task filter | blank (every tick counts) |
 | Count ticks without a done date | Off |
+| Kind line on lighter weeks | On |
+| Best-day line | On |
 
 Everything stays in your vault. Weekly Wrap makes no network calls.
 
