@@ -1,11 +1,12 @@
 import { longDay, rangeLabel, shortDay } from "./dates";
 import { Wrap } from "./wrap";
 import { alsoCounted } from "./words";
+import { TEXT } from "./strings";
 
 /** The saved note's generated part sits between these, so re-running a week never touches the user's words. */
 export const START = "%% weekly-wrap:start %%";
 export const END = "%% weekly-wrap:end %%";
-const KEEP_HEADING = "## Worth keeping";
+const KEEP_HEADING = `## ${TEXT.worthKeeping}`;
 
 const plural = (n: number, one: string, many = one + "s") => `${n} ${n === 1 ? one : many}`;
 
@@ -15,20 +16,32 @@ export function shortVersion(w: Wrap): string {
 	if (w.tasks.length) bits.push(`${plural(w.tasks.length, "task")} ticked`);
 	const touched = w.notesEdited + w.notesCreated;
 	if (touched) bits.push(`${plural(touched, "note")} touched`);
-	if (!bits.length) return "A blank page this week, and that's allowed.";
+	if (!bits.length) return TEXT.blankWeek;
 	let s = bits.join(" and ") + ".";
-	if (w.best && w.tasks.length > 1) s += ` ${longDay(w.best.day)} was your big day.`;
+	if (w.tone.highlight && w.best && w.tasks.length > 1) s += ` ${longDay(w.best.day)} was your big day.`;
 	return s;
 }
 
 /** The generated body: frontmatter is written separately so the user can add their own properties. */
 export function generated(w: Wrap): string {
 	const lines: string[] = [];
-	lines.push("# What you actually did", "", rangeLabel(w.week.from, w.week.to), "");
-	lines.push("> [!success] The short version", `> ${shortVersion(w)}`, "");
+	lines.push(`# ${TEXT.noteTitle}`, "", rangeLabel(w.week.from, w.week.to), "");
+	const quiet = w.tone.quiet;
+	if (quiet && w.tone.kind) lines.push(`> [!note] ${TEXT.lighterWeek}`, `> ${w.tone.kind}`, "");
+	else lines.push(`> [!success] ${TEXT.shortVersion}`, `> ${shortVersion(w)}`, "");
+
+	const made: string[] = [];
+	if (w.notesCreated) made.push(`${plural(w.notesCreated, "new note")}`);
+	if (w.notesEdited) made.push(`${plural(w.notesEdited, "note")} edited`);
+	const also = [...alsoCounted(w.extras)];
+	if (made.length) also.push(`Made: ${made.join(", ")}.`);
+	const alsoBlock = also.length ? [`## ${quiet ? TEXT.smallStuff : TEXT.alsoCounted}`, "", ...also.map((l) => `- ${l}`), ""] : [];
+
+	// A lighter week puts the small stuff first, so the page opens on what still happened.
+	if (quiet) lines.push(...alsoBlock);
 
 	if (w.tasks.length) {
-		lines.push("## Done", "");
+		lines.push(`## ${TEXT.done}`, "");
 		for (const d of w.perDay) {
 			const today = w.tasks.filter((t) => t.done === d.day);
 			if (!today.length) continue;
@@ -38,19 +51,14 @@ export function generated(w: Wrap): string {
 		}
 	}
 
-	lines.push("## Day by day", "", "| Day | Tasks |", "| --- | --- |");
+	lines.push(`## ${TEXT.dayByDay}`, "", "| Day | Tasks |", "| --- | --- |");
+	const starred = w.tone.highlight && w.best && w.tasks.length > 1 ? w.best.day : null;
 	for (const d of w.perDay) {
-		const star = w.best && d.day === w.best.day && w.tasks.length > 1 ? " ★" : "";
-		lines.push(`| ${shortDay(d.day)} ${Number(d.day.slice(8))}${star} | ${d.tasks} |`);
+		lines.push(`| ${shortDay(d.day)} ${Number(d.day.slice(8))}${d.day === starred ? " ★" : ""} | ${d.tasks} |`);
 	}
 	lines.push("");
 
-	const made: string[] = [];
-	if (w.notesCreated) made.push(`${plural(w.notesCreated, "new note")}`);
-	if (w.notesEdited) made.push(`${plural(w.notesEdited, "note")} edited`);
-	const also = [...alsoCounted(w.extras)];
-	if (made.length) also.push(`Made: ${made.join(", ")}.`);
-	if (also.length) lines.push("## Also counted", "", ...also.map((l) => `- ${l}`), "");
+	if (!quiet) lines.push(...alsoBlock);
 
 	return lines.join("\n").trimEnd();
 }

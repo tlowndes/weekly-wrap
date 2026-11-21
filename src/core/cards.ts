@@ -1,6 +1,7 @@
 import { longDay, rangeLabel, shortDay } from "./dates";
 import { Wrap } from "./wrap";
-import { careLines, hours, plural } from "./words";
+import { alsoCounted, careLines, hours, plural } from "./words";
+import { TEXT } from "./strings";
 
 export interface Stat {
 	value: string;
@@ -30,6 +31,11 @@ export interface Cards {
 	more: number;
 	/** "Looked after yourself" lines from Flight Deck's habits, water and Did I?. Empty = no card. */
 	care: string[];
+	/** A lighter week: the kind line goes on top and the small stuff comes before the task list. */
+	quiet: boolean;
+	kind: string | null;
+	/** On a lighter week, the small stuff in words (focus, care, captures, notes made). */
+	smallStuff: string[];
 	highlight: { title: string; body: string } | null;
 }
 
@@ -38,8 +44,14 @@ export interface Cards {
 export function cards(w: Wrap, top = 3): Cards {
 	const n = w.tasks.length;
 	const touched = w.notesEdited + w.notesCreated;
-	const headline =
-		n > 0 ? `You got ${plural(n, "thing")} done` : touched > 0 ? `You touched ${plural(touched, "note")}` : "A quiet one";
+	const quiet = w.tone.quiet;
+	const headline = quiet
+		? TEXT.lighterWeek
+		: n > 0
+			? `You got ${plural(n, "thing")} done`
+			: touched > 0
+				? `You touched ${plural(touched, "note")}`
+				: TEXT.quietHeadline;
 
 	const x = w.extras;
 	const stats: Stat[] = [{ value: String(n), label: n === 1 ? "task ticked" : "tasks ticked" }];
@@ -49,7 +61,7 @@ export function cards(w: Wrap, top = 3): Cards {
 	else if (stats.length < 4) stats.push({ value: String(w.notesCreated), label: w.notesCreated === 1 ? "new note" : "new notes" });
 
 	const max = Math.max(0, ...w.perDay.map((d) => d.tasks));
-	const bestShown = w.best !== null && n > 1;
+	const bestShown = w.tone.highlight && w.best !== null && n > 1;
 	const days = w.perDay.map((d) => ({
 		day: d.day,
 		name: shortDay(d.day),
@@ -66,7 +78,7 @@ export function cards(w: Wrap, top = 3): Cards {
 				title: `${longDay(w.best!.day)} was your big one`,
 				body:
 					`${plural(w.best!.tasks, "task")} ticked, the most of any day this week.` +
-					(x.moodBest === w.best!.day ? " Your mood was highest that day too." : ""),
+					(x.moodBest === w.best!.day ? TEXT.moodToo : ""),
 			}
 		: null;
 
@@ -79,6 +91,16 @@ export function cards(w: Wrap, top = 3): Cards {
 		proud,
 		more: Math.max(0, n - proud.length),
 		care: careLines(x),
+		quiet,
+		kind: quiet ? w.tone.kind : null,
+		smallStuff: quiet ? smallStuff(w) : [],
 		highlight,
 	};
+}
+
+function smallStuff(w: Wrap): string[] {
+	const out = alsoCounted(w.extras).filter((l) => !l.startsWith("Looked after yourself"));
+	if (w.notesEdited) out.push(`You changed ${plural(w.notesEdited, "note")}.`);
+	if (w.notesCreated) out.push(`You started ${plural(w.notesCreated, "new note")}.`);
+	return out;
 }

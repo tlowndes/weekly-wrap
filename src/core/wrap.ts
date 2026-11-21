@@ -36,7 +36,19 @@ export interface Wrap {
 	notesCreated: number;
 	/** Flight Deck counts, filled in by `gatherExtras` when its notes are there. */
 	extras: Extras;
+	/** How the week is worded: a lighter week leads with a kind line and the small stuff. */
+	tone: Tone;
 }
+
+export interface Tone {
+	quiet: boolean;
+	/** The kind line shown on a lighter week, when that's switched on. */
+	kind: string | null;
+	/** Show the best-day line. */
+	highlight: boolean;
+}
+
+export const PLAIN_TONE: Tone = { quiet: false, kind: null, highlight: true };
 
 export function ignored(path: string, ignore: string[]): boolean {
 	if (path.split("/").some((p) => p.startsWith("."))) return true;
@@ -86,5 +98,5 @@ export async function buildWrap(
 
 	const perDay = week.days.map((day) => ({ day, tasks: tasks.filter((t) => t.done === day).length }));
 	const top = perDay.reduce<DayCount | null>((b, d) => (d.tasks > (b?.tasks ?? 0) ? d : b), null);
-	return { week, tasks, perDay, best: top, notesEdited, notesCreated, extras: {} };
+	return { week, tasks, perDay, best: top, notesEdited, notesCreated, extras: {}, tone: { ...PLAIN_TONE } };
 }

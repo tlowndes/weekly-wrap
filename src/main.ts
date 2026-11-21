@@ -2,6 +2,8 @@ import { App, normalizePath, Notice, Plugin, PluginSettingTab, Setting, TFile } 
 import { localDay } from "./core/dates";
 import { check, dueWeek, EMPTY_NUDGE, NudgeState } from "./core/nudge";
 import { FLIGHT_DECK, gatherExtras, Sources } from "./core/sources";
+import { history, isQuiet, kindLine } from "./core/quiet";
+import { KIND_LINES } from "./core/strings";
 import { newNote, updateNote } from "./core/note";
 import { weekFor, Week } from "./core/week";
 import { buildWrap, NoteInfo, Wrap } from "./core/wrap";
@@ -19,6 +21,9 @@ interface WrapSettings {
 	installed: string;
 	nudgeState: NudgeState;
 	sources: Sources;
+	quietLine: boolean;
+	kindLines: string;
+	highlight: boolean;
 }
 
 const DEFAULTS: WrapSettings = {
@@ -32,6 +37,9 @@ const DEFAULTS: WrapSettings = {
 	installed: "",
 	nudgeState: { ...EMPTY_NUDGE },
 	sources: FLIGHT_DECK,
+	quietLine: true,
+	kindLines: KIND_LINES.join("\n"),
+	highlight: true,
 };
 
 /** How often the nudge is re-checked while Obsidian stays open, so it appears when the time passes. */
@@ -175,6 +183,13 @@ export default class WeeklyWrapPlugin extends Plugin {
 			{ ignore, countUndated: this.settings.countUndated, taskFilter: this.settings.taskFilter.trim() },
 		);
 		wrap.extras = await gatherExtras({ notes, read }, week, this.settings.sources, localDay);
+		const opts = { ignore, countUndated: false, taskFilter: this.settings.taskFilter.trim() };
+		const quiet = isQuiet(wrap.tasks.length, await history(notes, read, week, opts));
+		wrap.tone = {
+			quiet,
+			kind: quiet && this.settings.quietLine ? kindLine(week, this.settings.kindLines.split("\n")) : null,
+			highlight: this.settings.highlight,
+		};
 
 		if (!vault.getAbstractFileByPath(folder)) await vault.createFolder(folder);
 		const path = this.notePath(week);
@@ -277,6 +292,40 @@ class WrapSettingTab extends PluginSettingTab {
 			.addToggle((t) =>
 				t.setValue(s.countUndated).onChange(async (v) => {
 					s.countUndated = v;
+					await save();
+				}),
+			);
+
+		new Setting(containerEl).setName("Tone").setHeading();
+
+		new Setting(containerEl)
+			.setName("Kind line on lighter weeks")
+			.setDesc("When a week has under half your usual ticks (your last 4 weeks), lead with a kind line and the small stuff. No comparison numbers are shown.")
+			.addToggle((t) =>
+				t.setValue(s.quietLine).onChange(async (v) => {
+					s.quietLine = v;
+					await save();
+				}),
+			);
+
+		new Setting(containerEl)
+			.setName("Kind lines")
+			.setDesc("One per line. A different one is picked each week.")
+			.addTextArea((t) => {
+				t.setValue(s.kindLines).onChange(async (v) => {
+					s.kindLines = v;
+					await save();
+				});
+				t.inputEl.rows = 5;
+				t.inputEl.addClass("ww-kind-lines");
+			});
+
+		new Setting(containerEl)
+			.setName("Best-day line")
+			.setDesc("Star your best day and add a line about it.")
+			.addToggle((t) =>
+				t.setValue(s.highlight).onChange(async (v) => {
+					s.highlight = v;
 					await save();
 				}),
 			);

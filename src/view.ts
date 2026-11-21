@@ -1,5 +1,6 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import { cards } from "./core/cards";
+import { TEXT } from "./core/strings";
 import { nextWeek, previousWeek, weekEnding, Week } from "./core/week";
 import { Wrap } from "./core/wrap";
 import type WeeklyWrapPlugin from "./main";
@@ -80,30 +81,50 @@ export class WrapView extends ItemView {
 		if (isLatest) next.disabled = true;
 		this.button(nav, "Open note", "ww-btn mod-cta", () => this.plugin.openNote(w.week));
 
-		const stats = page.createDiv({ cls: "ww-stats" });
-		for (const s of c.stats) {
-			const card = stats.createDiv({ cls: "ww-card ww-stat" });
-			card.createDiv({ cls: "ww-stat-value", text: s.value });
-			card.createDiv({ cls: "ww-stat-label", text: s.label });
-		}
+		const kind = () => {
+			if (!c.kind) return;
+			const k = page.createDiv({ cls: "ww-card ww-kind" });
+			k.createDiv({ cls: "ww-card-title", text: TEXT.lighterWeek });
+			k.createDiv({ text: c.kind });
+		};
 
-		const strip = page.createDiv({ cls: "ww-card" });
-		strip.createDiv({ cls: "ww-card-title", text: "Your week, day by day" });
-		const days = strip.createDiv({ cls: "ww-days" });
-		for (const d of c.days) {
-			const cell = days.createDiv({ cls: "ww-day" + (d.best ? " is-best" : "") });
-			cell.createDiv({ cls: "ww-day-name", text: d.best ? `${d.name} ★` : d.name });
-			cell.createDiv({ cls: `ww-bar ww-level-${d.level}` });
-			cell.createDiv({ cls: "ww-day-detail", text: d.detail });
-		}
+		const small = () => {
+			if (!c.smallStuff.length) return;
+			const card = page.createDiv({ cls: "ww-card" });
+			card.createDiv({ cls: "ww-card-title", text: TEXT.smallStuff });
+			const list = card.createEl("ul", { cls: "ww-list" });
+			for (const l of c.smallStuff) list.createEl("li", { text: l });
+		};
 
-		if (c.proud.length) {
-			const proud = page.createDiv({ cls: "ww-card" });
-			proud.createDiv({ cls: "ww-card-title", text: "Proud of" });
-			const list = proud.createEl("ul", { cls: "ww-list" });
+		const stats = () => {
+			const row = page.createDiv({ cls: "ww-stats" });
+			for (const s of c.stats) {
+				const card = row.createDiv({ cls: "ww-card ww-stat" });
+				card.createDiv({ cls: "ww-stat-value", text: s.value });
+				card.createDiv({ cls: "ww-stat-label", text: s.label });
+			}
+		};
+
+		const strip = () => {
+			const card = page.createDiv({ cls: "ww-card" });
+			card.createDiv({ cls: "ww-card-title", text: TEXT.cardDays });
+			const days = card.createDiv({ cls: "ww-days" });
+			for (const d of c.days) {
+				const cell = days.createDiv({ cls: "ww-day" + (d.best ? " is-best" : "") });
+				cell.createDiv({ cls: "ww-day-name", text: d.best ? `${d.name} ★` : d.name });
+				cell.createDiv({ cls: `ww-bar ww-level-${d.level}` });
+				cell.createDiv({ cls: "ww-day-detail", text: d.detail });
+			}
+		};
+
+		const proud = () => {
+			if (!c.proud.length) return;
+			const card = page.createDiv({ cls: "ww-card" });
+			card.createDiv({ cls: "ww-card-title", text: c.quiet ? TEXT.done : TEXT.proudOf });
+			const list = card.createEl("ul", { cls: "ww-list" });
 			for (const t of c.proud) list.createEl("li", { text: t });
 			if (c.more > 0) {
-				const all = proud.createEl("a", { cls: "ww-more", text: `See all ${w.tasks.length}`, href: "#" });
+				const all = card.createEl("a", { cls: "ww-more", text: `See all ${w.tasks.length}`, href: "#" });
 				all.addEventListener("click", (e) => {
 					e.preventDefault();
 					list.empty();
@@ -111,21 +132,27 @@ export class WrapView extends ItemView {
 					all.remove();
 				});
 			}
-		}
+		};
 
-		if (c.care.length) {
-			const care = page.createDiv({ cls: "ww-card" });
-			care.createDiv({ cls: "ww-card-title", text: "Looked after yourself" });
-			const list = care.createEl("ul", { cls: "ww-list" });
+		const care = () => {
+			if (!c.care.length) return;
+			const card = page.createDiv({ cls: "ww-card" });
+			card.createDiv({ cls: "ww-card-title", text: TEXT.lookedAfter });
+			const list = card.createEl("ul", { cls: "ww-list" });
 			for (const l of c.care) list.createEl("li", { text: l });
-			care.createDiv({ cls: "ww-source", text: "From Flight Deck" });
-		}
+			card.createDiv({ cls: "ww-source", text: TEXT.fromFlightDeck });
+		};
 
-		if (c.highlight) {
+		const highlight = () => {
+			if (!c.highlight) return;
 			const hi = page.createDiv({ cls: "ww-card ww-highlight" });
 			hi.createDiv({ cls: "ww-card-title", text: c.highlight.title });
 			hi.createDiv({ text: c.highlight.body });
-		}
+		};
+
+		// A lighter week opens on the kind line and the small stuff; a usual week on the numbers.
+		const order = c.quiet ? [kind, small, care, proud, strip, stats, highlight] : [stats, strip, proud, care, highlight];
+		for (const section of order) section();
 	}
 
 	private button(parent: HTMLElement, text: string, cls: string, onClick: () => void): HTMLButtonElement {
