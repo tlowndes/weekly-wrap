@@ -9,7 +9,17 @@ Weekly Wrap reads your vault and writes a note listing what you got done: tasks 
 - **Ticked tasks** with a Tasks plugin done date (`✅ 2026-11-20`), anywhere in your vault.
 - **Notes** you created or edited that week.
 
-More is on the way: extra sections for Focus logs, habits and mood.
+### Flight Deck extras
+
+If your vault has [Flight Deck](https://github.com/tlowndes/ObsidianCapture)'s notes, or notes written the same way, the wrap adds:
+
+- **Focus**: sessions and time from `99 - Meta/Focus log.md` (`- 2026-11-20 14:05 · Task · 45 min`).
+- **Habits, water and mood**: from the `## Log` table in `99 - Meta/Habits.md`.
+- **Did I? checks**: from the daily notes in `99 - Meta/Did I/`.
+- **Job applications**: notes in `02 - Area/Work/Job Hunt/Applications` with an `applied:` date.
+- **Captures**: new notes in `01 - Inbox`.
+
+Each path can be changed or switched off in settings, and anything not found is simply left out.
 
 ## Use it
 

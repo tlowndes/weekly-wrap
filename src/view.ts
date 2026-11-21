@@ -113,6 +113,14 @@ export class WrapView extends ItemView {
 			}
 		}
 
+		if (c.care.length) {
+			const care = page.createDiv({ cls: "ww-card" });
+			care.createDiv({ cls: "ww-card-title", text: "Looked after yourself" });
+			const list = care.createEl("ul", { cls: "ww-list" });
+			for (const l of c.care) list.createEl("li", { text: l });
+			care.createDiv({ cls: "ww-source", text: "From Flight Deck" });
+		}
+
 		if (c.highlight) {
 			const hi = page.createDiv({ cls: "ww-card ww-highlight" });
 			hi.createDiv({ cls: "ww-card-title", text: c.highlight.title });
