@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { cards } from "../src/core/cards";
+import { history, isQuiet, kindLine } from "../src/core/quiet";
+import { KIND_LINES } from "../src/core/strings";
 import { appliedDay, didI, FLIGHT_DECK, focus, gatherExtras, habits } from "../src/core/sources";
 import { hours } from "../src/core/words";
 import { check, dueWeek, EMPTY_NUDGE } from "../src/core/nudge";
@@ -264,5 +266,66 @@ describe("Flight Deck sources", () => {
 
 	it("formats hours", () => {
 		expect([hours(45), hours(120), hours(400)]).toEqual(["45m", "2h", "6h 40m"]);
+	});
+});
+
+describe("lighter weeks and tone", () => {
+	const week = weekFor("2026-11-27");
+	const at = (day: string) => startOfDayMs(day) + 12 * 3600000;
+
+	it("works out the last four weeks' ticks", async () => {
+		const text = [
+			"- [x] a ✅ 2026-10-31",
+			"- [x] b ✅ 2026-11-06",
+			"- [x] c ✅ 2026-11-13",
+			"- [x] d ✅ 2026-11-14",
+			"- [x] e ✅ 2026-11-20",
+			"- [x] this week ✅ 2026-11-25",
+			"- [x] too old ✅ 2026-10-30",
+		].join("\n");
+		const notes = [{ path: "T.md", ctime: at("2026-10-01"), mtime: at("2026-11-25") }];
+		expect(await history(notes, async () => text, week, { ignore: [], countUndated: false, taskFilter: "" })).toEqual([1, 2, 1, 2]);
+	});
+
+	it("calls a week lighter only when it's well under a real usual", () => {
+		expect(isQuiet(2, [10, 8, 12, 10])).toBe(true);
+		expect(isQuiet(6, [10, 8, 12, 10])).toBe(false);
+		expect(isQuiet(0, [1, 2, 0, 1])).toBe(false);
+		expect(isQuiet(0, [])).toBe(false);
+	});
+
+	it("picks the same kind line for a week and falls back to the defaults", () => {
+		expect(kindLine(week)).toBe(kindLine(week));
+		expect(kindLine(week, ["Only one"])).toBe("Only one");
+		expect(kindLine(week, ["", "  "])).toBe(KIND_LINES[48 % KIND_LINES.length]);
+	});
+
+	it("leads a lighter week with the kind line and the small stuff, with no comparison", async () => {
+		const notes = [
+			{ path: "T.md", ctime: at("2026-10-01"), mtime: at("2026-11-24") },
+			{ path: "Plan.md", ctime: at("2026-10-01"), mtime: at("2026-11-25") },
+		];
+		const w = await buildWrap(notes, async (p) => (p === "T.md" ? "- [x] Paid council tax ✅ 2026-11-23" : ""), week);
+		w.extras = { focus: { sessions: 1, minutes: 25, longest: { task: "CV", minutes: 25 } }, water: { goalDays: 2, goalMl: 2000 } };
+		w.tone = { quiet: true, kind: "Rest weeks count too. Here's what still happened.", highlight: true };
+		const note = newNote(w);
+		expect(note).toContain("> [!note] A lighter week\n> Rest weeks count too.");
+		expect(note.indexOf("## The small stuff counts")).toBeLessThan(note.indexOf("## Done"));
+		expect(note).not.toContain("## Also counted");
+		expect(note).not.toMatch(/usual|average|less than|fewer than \d/i);
+		const c = cards(w);
+		expect(c.headline).toBe("A lighter week");
+		expect(c.kind).toContain("Rest weeks");
+		expect(c.smallStuff).toEqual(["Focus: 1 session, 25m.", "You changed 2 notes."]);
+		expect(c.care).toEqual(["Water goal hit 2 times"]);
+	});
+
+	it("turns the best-day line off", async () => {
+		const notes = [{ path: "T.md", ctime: at("2026-10-01"), mtime: at("2026-11-26") }];
+		const w = await buildWrap(notes, async () => "- [x] a ✅ 2026-11-26\n- [x] b ✅ 2026-11-26", week);
+		w.tone = { quiet: false, kind: null, highlight: false };
+		expect(cards(w).highlight).toBeNull();
+		expect(shortVersion(w)).not.toContain("big day");
+		expect(newNote(w)).not.toContain("★");
 	});
 });

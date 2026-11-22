@@ -192,3 +192,17 @@
 	font-size: var(--font-ui-smaller);
 	color: var(--text-faint);
 }
+
+/* A lighter week's kind line: calm, not celebratory. */
+.ww-kind {
+	background: color-mix(in srgb, var(--color-green) 12%, var(--background-primary));
+}
+
+.ww-kind .ww-card-title {
+	color: var(--text-normal);
+}
+
+.ww-kind-lines {
+	width: 100%;
+	min-width: 260px;
+}
