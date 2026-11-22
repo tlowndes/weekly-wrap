@@ -4,6 +4,8 @@ Every Friday, a page of what you actually did this week. Built for the "I did no
 
 Weekly Wrap reads your vault and writes a note listing what you got done: tasks you ticked, notes you made and edited, and your best day. It only looks back, and it only counts what went right.
 
+![A normal week in the card view](./images/card-view.png)
+
 ## What it counts
 
 - **Ticked tasks** with a Tasks plugin done date (`✅ 2026-11-20`), anywhere in your vault.
@@ -31,6 +33,8 @@ Each path can be changed or switched off in settings, and anything not found is 
 
 When a week has under half your usual ticks (worked out over your last 4 weeks), the wrap leads with a kind line, such as "Rest weeks count too. Here's what still happened.", and puts the small stuff first: notes changed, focus, water, Did I? checks. It never shows a comparison or says what didn't happen. The kind lines are yours to edit in settings.
 
+![A lighter week, with the kind line and the small stuff first](./images/lighter-week.png)
+
 ## The Friday nudge
 
 From 3 pm on your wrap day, a small notice says your week's wrapped, with **Have a look** and **Later**. Nothing opens by itself. Until you open it, a dot sits on the ribbon icon. Missed Friday? It nudges the next time you open Obsidian.
@@ -40,7 +44,7 @@ From 3 pm on your wrap day, a small notice says your week's wrapped, with **Have
 | Setting | Default |
 | --- | --- |
 | Wrap day | Friday |
-| Friday nudge | On |
+| Nudge when the wrap is ready | On |
 | Nudge from | 15:00 |
 | Wrap folder | `Wraps` |
 | Folders to leave out | `Templates` |
@@ -51,6 +55,10 @@ From 3 pm on your wrap day, a small notice says your week's wrapped, with **Have
 
 Everything stays in your vault. Weekly Wrap makes no network calls.
 
+## Install
+
+Until it's in the community store: download `main.js`, `manifest.json` and `styles.css` from the latest [release](https://github.com/tlowndes/weekly-wrap/releases), put them in `.obsidian/plugins/weekly-wrap/` in your vault, then switch Weekly Wrap on under Community plugins.
+
 ## Develop
 
 ```
@@ -58,3 +66,5 @@ npm install
 npm test        # unit tests for the counting and the note
 npm run build   # main.js for .obsidian/plugins/weekly-wrap/
 ```
+
+`node tools/shots/shoot.mjs` rebuilds the README screenshots from sample weeks. See [RELEASING.md](./RELEASING.md) for releases.

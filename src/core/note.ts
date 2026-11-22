@@ -18,7 +18,7 @@ export function shortVersion(w: Wrap): string {
 	if (touched) bits.push(`${plural(touched, "note")} touched`);
 	if (!bits.length) return TEXT.blankWeek;
 	let s = bits.join(" and ") + ".";
-	if (w.tone.highlight && w.best && w.tasks.length > 1) s += ` ${longDay(w.best.day)} was your big day.`;
+	if (w.tone.highlight && !w.tone.quiet && w.best) s += ` ${longDay(w.best.day)} was your big day.`;
 	return s;
 }
 
@@ -52,7 +52,7 @@ export function generated(w: Wrap): string {
 	}
 
 	lines.push(`## ${TEXT.dayByDay}`, "", "| Day | Tasks |", "| --- | --- |");
-	const starred = w.tone.highlight && w.best && w.tasks.length > 1 ? w.best.day : null;
+	const starred = w.tone.highlight && !w.tone.quiet && w.best ? w.best.day : null;
 	for (const d of w.perDay) {
 		lines.push(`| ${shortDay(d.day)} ${Number(d.day.slice(8))}${d.day === starred ? " ★" : ""} | ${d.tasks} |`);
 	}

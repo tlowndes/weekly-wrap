@@ -83,9 +83,8 @@ export class WrapView extends ItemView {
 
 		const kind = () => {
 			if (!c.kind) return;
-			const k = page.createDiv({ cls: "ww-card ww-kind" });
-			k.createDiv({ cls: "ww-card-title", text: TEXT.lighterWeek });
-			k.createDiv({ text: c.kind });
+			// The headline already says "A lighter week", so the kind line stands on its own.
+			page.createDiv({ cls: "ww-card ww-kind", text: c.kind });
 		};
 
 		const small = () => {
@@ -113,7 +112,7 @@ export class WrapView extends ItemView {
 				const cell = days.createDiv({ cls: "ww-day" + (d.best ? " is-best" : "") });
 				cell.createDiv({ cls: "ww-day-name", text: d.best ? `${d.name} ★` : d.name });
 				cell.createDiv({ cls: `ww-bar ww-level-${d.level}` });
-				cell.createDiv({ cls: "ww-day-detail", text: d.detail });
+				cell.createDiv({ cls: "ww-day-detail", text: d.detail || "\u00a0" });
 			}
 		};
 

@@ -1,14 +1,19 @@
 {
   "name": "weekly-wrap",
-  "version": "0.1.0",
-  "description": "Every Friday, a page of what you actually did this week.",
+  "version": "1.0.0",
+  "description": "See what you actually did this week: ticked tasks, notes and your best day, every Friday.",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "tsc --noEmit && node esbuild.config.mjs production",
-    "test": "vitest run"
+    "test": "vitest run",
+    "version": "node version-bump.mjs && git add manifest.json versions.json"
   },
-  "keywords": ["obsidian", "weekly review", "adhd"],
+  "keywords": [
+    "obsidian",
+    "weekly review",
+    "adhd"
+  ],
   "author": "Tom Lowndes",
   "license": "MIT",
   "devDependencies": {
