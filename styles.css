@@ -151,3 +151,39 @@
 		flex: 1 1 auto;
 	}
 }
+
+/* Friday nudge: a dot on the ribbon icon until the wrap is opened, and the notice's buttons. */
+.ww-ribbon.ww-has-wrap {
+	position: relative;
+}
+
+.ww-ribbon.ww-has-wrap::after {
+	content: "";
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+}
+
+.ww-notice {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-3);
+}
+
+.ww-notice-title {
+	font-weight: var(--font-semibold);
+}
+
+.ww-notice-actions {
+	display: flex;
+	gap: var(--size-2-3);
+	margin-top: var(--size-2-2);
+}
+
+.ww-notice-actions button {
+	min-height: 36px;
+}

@@ -51,6 +51,7 @@ export class WrapView extends ItemView {
 		try {
 			const wrap = await this.plugin.buildAndSave(week);
 			this.draw(wrap);
+			await this.plugin.markOpened(week);
 		} catch (e) {
 			console.error("Weekly Wrap", e);
 			this.contentEl.empty();
