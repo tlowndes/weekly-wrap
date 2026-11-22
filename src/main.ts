@@ -2,7 +2,8 @@ import { App, normalizePath, Notice, Plugin, PluginSettingTab, Setting, TFile } 
 import { localDay } from "./core/dates";
 import { newNote, updateNote } from "./core/note";
 import { weekFor, Week } from "./core/week";
-import { buildWrap, NoteInfo } from "./core/wrap";
+import { buildWrap, NoteInfo, Wrap } from "./core/wrap";
+import { VIEW_TYPE, WrapView } from "./view";
 
 interface WrapSettings {
 	folder: string;
@@ -27,6 +28,7 @@ export default class WeeklyWrapPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+		this.registerView(VIEW_TYPE, (leaf) => new WrapView(leaf, this));
 		this.addRibbonIcon("calendar-check", "Open this week's wrap", () => this.openWrap(this.lastWeek()));
 		this.addCommand({ id: "open-last-week", name: "Open the latest wrap", callback: () => this.openWrap(this.lastWeek()) });
 		this.addCommand({
@@ -41,20 +43,41 @@ export default class WeeklyWrapPlugin extends Plugin {
 		return weekFor(localDay(Date.now()), this.settings.wrapDay);
 	}
 
-	/** Builds [week]'s wrap, saves it as a note (keeping anything the user wrote) and opens it. */
+	private folder(): string {
+		return normalizePath(this.settings.folder || DEFAULTS.folder);
+	}
+
+	notePath(week: Week): string {
+		return normalizePath(`${this.folder()}/${week.label}.md`);
+	}
+
+	/** Shows [week] in the card view, reusing an open Weekly Wrap tab if there is one. */
 	async openWrap(week: Week) {
+		const { workspace } = this.app;
+		const leaf = workspace.getLeavesOfType(VIEW_TYPE)[0] ?? workspace.getLeaf("tab");
+		await leaf.setViewState({ type: VIEW_TYPE, active: true, state: { to: week.to } });
+		workspace.revealLeaf(leaf);
+	}
+
+	/** Opens [week]'s saved note, building it first if it isn't there yet. */
+	async openNote(week: Week) {
 		try {
-			const file = await this.saveWrap(week);
-			await this.app.workspace.getLeaf(false).openFile(file);
+			let file = this.app.vault.getAbstractFileByPath(this.notePath(week));
+			if (!(file instanceof TFile)) {
+				await this.buildAndSave(week);
+				file = this.app.vault.getAbstractFileByPath(this.notePath(week));
+			}
+			if (file instanceof TFile) await this.app.workspace.getLeaf("tab").openFile(file);
 		} catch (e) {
 			console.error("Weekly Wrap", e);
-			new Notice("Weekly Wrap couldn't build this week. Details are in the developer console.");
+			new Notice("Weekly Wrap couldn't open this week's note. Details are in the developer console.");
 		}
 	}
 
-	async saveWrap(week: Week): Promise<TFile> {
+	/** Builds [week]'s wrap and saves it as a note, keeping anything the user wrote. */
+	async buildAndSave(week: Week): Promise<Wrap> {
 		const vault = this.app.vault;
-		const folder = normalizePath(this.settings.folder || DEFAULTS.folder);
+		const folder = this.folder();
 		const ignore = [folder, ...this.settings.ignore.split(",").map((s) => s.trim()).filter(Boolean)];
 		const notes: NoteInfo[] = vault.getMarkdownFiles().map((f) => ({ path: f.path, ctime: f.stat.ctime, mtime: f.stat.mtime }));
 		const wrap = await buildWrap(
@@ -69,13 +92,11 @@ export default class WeeklyWrapPlugin extends Plugin {
 		);
 
 		if (!vault.getAbstractFileByPath(folder)) await vault.createFolder(folder);
-		const path = normalizePath(`${folder}/${week.label}.md`);
+		const path = this.notePath(week);
 		const existing = vault.getAbstractFileByPath(path);
-		if (existing instanceof TFile) {
-			await vault.process(existing, (text) => updateNote(text, wrap));
-			return existing;
-		}
-		return vault.create(path, newNote(wrap));
+		if (existing instanceof TFile) await vault.process(existing, (text) => updateNote(text, wrap));
+		else await vault.create(path, newNote(wrap));
+		return wrap;
 	}
 
 	async loadSettings() {
