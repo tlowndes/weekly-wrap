@@ -1,6 +1,7 @@
 import { App, normalizePath, Notice, Plugin, PluginSettingTab, Setting, TFile } from "obsidian";
 import { localDay } from "./core/dates";
 import { check, dueWeek, EMPTY_NUDGE, NudgeState } from "./core/nudge";
+import { FLIGHT_DECK, gatherExtras, Sources } from "./core/sources";
 import { newNote, updateNote } from "./core/note";
 import { weekFor, Week } from "./core/week";
 import { buildWrap, NoteInfo, Wrap } from "./core/wrap";
@@ -17,6 +18,7 @@ interface WrapSettings {
 	/** Day the plugin first ran: older weeks are never nudged. */
 	installed: string;
 	nudgeState: NudgeState;
+	sources: Sources;
 }
 
 const DEFAULTS: WrapSettings = {
@@ -29,6 +31,7 @@ const DEFAULTS: WrapSettings = {
 	nudgeHour: 15,
 	installed: "",
 	nudgeState: { ...EMPTY_NUDGE },
+	sources: FLIGHT_DECK,
 };
 
 /** How often the nudge is re-checked while Obsidian stays open, so it appears when the time passes. */
@@ -160,16 +163,18 @@ export default class WeeklyWrapPlugin extends Plugin {
 		const folder = this.folder();
 		const ignore = [folder, ...this.settings.ignore.split(",").map((s) => s.trim()).filter(Boolean)];
 		const notes: NoteInfo[] = vault.getMarkdownFiles().map((f) => ({ path: f.path, ctime: f.stat.ctime, mtime: f.stat.mtime }));
+		const read = async (path: string) => {
+			const f = vault.getAbstractFileByPath(path);
+			if (!(f instanceof TFile)) throw new Error("gone");
+			return vault.cachedRead(f);
+		};
 		const wrap = await buildWrap(
 			notes,
-			async (path) => {
-				const f = vault.getAbstractFileByPath(path);
-				if (!(f instanceof TFile)) throw new Error("gone");
-				return vault.cachedRead(f);
-			},
+			read,
 			week,
 			{ ignore, countUndated: this.settings.countUndated, taskFilter: this.settings.taskFilter.trim() },
 		);
+		wrap.extras = await gatherExtras({ notes, read }, week, this.settings.sources, localDay);
 
 		if (!vault.getAbstractFileByPath(folder)) await vault.createFolder(folder);
 		const path = this.notePath(week);
@@ -181,7 +186,9 @@ export default class WeeklyWrapPlugin extends Plugin {
 
 	async loadSettings() {
 		const data = (await this.loadData()) ?? {};
-		this.settings = { ...DEFAULTS, ...data, nudgeState: { ...EMPTY_NUDGE, ...(data.nudgeState ?? {}) } };
+		const sources = { ...FLIGHT_DECK } as Sources;
+		for (const k of Object.keys(FLIGHT_DECK) as (keyof Sources)[]) sources[k] = { ...FLIGHT_DECK[k], ...(data.sources?.[k] ?? {}) };
+		this.settings = { ...DEFAULTS, ...data, nudgeState: { ...EMPTY_NUDGE, ...(data.nudgeState ?? {}) }, sources };
 	}
 
 	async saveSettings() {
@@ -273,5 +280,37 @@ class WrapSettingTab extends PluginSettingTab {
 					await save();
 				}),
 			);
+
+		new Setting(containerEl).setName("Flight Deck sources").setHeading();
+		containerEl.createEl("p", {
+			cls: "setting-item-description",
+			text: "Extra counts read from Flight Deck's notes, or any notes written the same way. Each one is skipped when its note or folder isn't there.",
+		});
+		const labels: Record<keyof Sources, [string, string]> = {
+			focus: ["Focus log", "Note of focus sessions"],
+			habits: ["Habits and mood", "Note with the habits log"],
+			didI: ["Did I? checks", "Folder of daily Did I? notes"],
+			jobs: ["Job applications", "Folder of application notes with an applied date"],
+			captures: ["Captures", "Inbox folder: new notes here count as captures"],
+		};
+		for (const key of Object.keys(labels) as (keyof Sources)[]) {
+			const src = s.sources[key];
+			const [name, what] = labels[key];
+			const found = () => (this.app.vault.getAbstractFileByPath(normalizePath(src.path)) ? "found" : "not found");
+			const setting = new Setting(containerEl).setName(name).setDesc(`${what}. ${found()}.`);
+			setting.addText((t) =>
+				t.setValue(src.path).onChange(async (v) => {
+					src.path = v.trim();
+					setting.setDesc(`${what}. ${found()}.`);
+					await save();
+				}),
+			);
+			setting.addToggle((t) =>
+				t.setValue(src.on).onChange(async (v) => {
+					src.on = v;
+					await save();
+				}),
+			);
+		}
 	}
 }

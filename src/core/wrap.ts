@@ -1,4 +1,5 @@
 import { Day, localDay, startOfDayMs } from "./dates";
+import type { Extras } from "./sources";
 import { doneIn, DoneTask } from "./tasks";
 import { inWeek, Week } from "./week";
 
@@ -33,6 +34,8 @@ export interface Wrap {
 	best: DayCount | null;
 	notesEdited: number;
 	notesCreated: number;
+	/** Flight Deck counts, filled in by `gatherExtras` when its notes are there. */
+	extras: Extras;
 }
 
 export function ignored(path: string, ignore: string[]): boolean {
@@ -83,5 +86,5 @@ export async function buildWrap(
 
 	const perDay = week.days.map((day) => ({ day, tasks: tasks.filter((t) => t.done === day).length }));
 	const top = perDay.reduce<DayCount | null>((b, d) => (d.tasks > (b?.tasks ?? 0) ? d : b), null);
-	return { week, tasks, perDay, best: top, notesEdited, notesCreated };
+	return { week, tasks, perDay, best: top, notesEdited, notesCreated, extras: {} };
 }

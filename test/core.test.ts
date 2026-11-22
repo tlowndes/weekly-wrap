@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { cards } from "../src/core/cards";
+import { appliedDay, didI, FLIGHT_DECK, focus, gatherExtras, habits } from "../src/core/sources";
+import { hours } from "../src/core/words";
 import { check, dueWeek, EMPTY_NUDGE } from "../src/core/nudge";
-import { isoWeek, rangeLabel, startOfDayMs } from "../src/core/dates";
+import { isoWeek, localDay, rangeLabel, startOfDayMs } from "../src/core/dates";
 import { END, newNote, shortVersion, START, updateNote } from "../src/core/note";
 import { cleanText, doneIn } from "../src/core/tasks";
 import { nextWeek, previousWeek, weekFor } from "../src/core/week";
@@ -186,5 +188,81 @@ describe("Friday nudge", () => {
 	it("stays quiet when turned off or before it was installed", () => {
 		expect(check(EMPTY_NUDGE, "2026-11-20", 16, { ...opts, enabled: false }).notice).toBe(false);
 		expect(check(EMPTY_NUDGE, "2026-11-20", 16, { ...opts, installed: "2026-11-21" }).dot).toBe(false);
+	});
+});
+
+describe("Flight Deck sources", () => {
+	const week = weekFor("2026-11-20");
+	const at = (day: string) => startOfDayMs(day) + 12 * 3600000;
+
+	it("reads the Focus log for the week", () => {
+		const f = focus(
+			"# Focus log\n\n- 2026-11-10 09:00 · Old · 90 min\n- 2026-11-17 10:00 · Portfolio · 75 min\n- 2026-11-19 · CV · 25 min\nnot a line",
+			week,
+		);
+		expect(f).toEqual({ sessions: 2, minutes: 100, longest: { task: "Portfolio", minutes: 75 } });
+	});
+
+	it("reads habits, water and the best mood from the Habits log", () => {
+		const text = [
+			"# Habits",
+			"## Habits",
+			"- 🧘 Stretch · Mon Wed Fri",
+			"- Read 10 pages",
+			"- 💧 Water · counter 2000 ml +250",
+			"## Water",
+			"goal: 1500 ml",
+			"## Log",
+			"| Date | Water ml | Done |",
+			"|---|---|---|",
+			"| 2026-11-16 | 1500 | Stretch, mood=3 |",
+			"| 2026-11-17 | 500 | Stretch, Read 10 pages, mood=5 |",
+			"| 2026-11-18 | 2000 | Stretch, mood=2 |",
+			"| 2026-11-01 | 3000 | Stretch, mood=5 |",
+		].join("\n");
+		const h = habits(text, week);
+		expect(h.habits).toEqual([
+			{ name: "Stretch", days: 3 },
+			{ name: "Read 10 pages", days: 1 },
+		]);
+		expect(h.water).toEqual({ goalDays: 2, goalMl: 1500 });
+		expect(h.moodBest).toBe("2026-11-17");
+	});
+
+	it("counts Did I? stamps and finds applied dates", () => {
+		expect(didI("# Did I? · Thu 19 Nov\n\n- 08:12 · Hob off\n- 08:13 · Back door\n- not a stamp")).toBe(2);
+		expect(appliedDay("---\ntype: application\napplied: 2026-11-17\n---\n# Monzo")).toBe("2026-11-17");
+		expect(appliedDay("---\napplied:\n---")).toBeNull();
+	});
+
+	it("gathers only what's there and shows it in the cards and note", async () => {
+		const files: Record<string, string> = {
+			"99 - Meta/Focus log.md": "- 2026-11-19 10:00 · Portfolio · 50 min",
+			"99 - Meta/Did I/2026-11-19.md": "- 08:12 · Hob off",
+			"02 - Area/Work/Job Hunt/Applications/Monzo.md": "---\napplied: 2026-11-18\n---",
+			"01 - Inbox/Idea.md": "x",
+			"Tasks.md": "- [x] Two ✅ 2026-11-19\n- [x] One ✅ 2026-11-19",
+		};
+		const notes = Object.keys(files).map((path) => ({ path, ctime: at("2026-11-18"), mtime: at("2026-11-19") }));
+		const read = async (p: string) => files[p];
+		const w = await buildWrap(notes, read, week);
+		w.extras = await gatherExtras({ notes, read }, week, FLIGHT_DECK, localDay);
+		expect(w.extras).toEqual({
+			focus: { sessions: 1, minutes: 50, longest: { task: "Portfolio", minutes: 50 } },
+			didI: 1,
+			applications: 1,
+			captures: 1,
+		});
+		const c = cards(w);
+		expect(c.stats.map((s) => `${s.value} ${s.label}`)).toEqual(["2 tasks ticked", "50m of focus", "5 notes touched", "1 application"]);
+		expect(c.care).toEqual(["1 Did I? check, so you didn't have to wonder"]);
+		const note = newNote(w);
+		expect(note).toContain("- Focus: 1 session, 50m.");
+		expect(note).toContain("- Job hunt: 1 application sent.");
+		expect(note).toContain("- Captured: 1 new inbox note, so nothing got lost.");
+	});
+
+	it("formats hours", () => {
+		expect([hours(45), hours(120), hours(400)]).toEqual(["45m", "2h", "6h 40m"]);
 	});
 });
