@@ -1,0 +1,208 @@
+/* Weekly Wrap card view. Colours come from the theme's variables, so it follows light, dark and custom themes. */
+
+.ww-root {
+	padding: 0;
+}
+
+.ww-page {
+	max-width: 760px;
+	margin: 0 auto;
+	padding: var(--size-4-8) var(--size-4-6);
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-4);
+}
+
+.ww-loading {
+	padding: var(--size-4-8);
+	color: var(--text-muted);
+}
+
+.ww-head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: var(--size-4-4);
+}
+
+.ww-kicker {
+	font-family: var(--font-monospace);
+	font-size: var(--font-ui-smaller);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+
+.ww-headline {
+	margin: var(--size-2-2) 0 0;
+	font-size: 1.9em;
+	line-height: 1.2;
+}
+
+.ww-nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--size-2-3);
+}
+
+.ww-btn {
+	min-height: 44px;
+	padding: 0 var(--size-4-3);
+}
+
+.ww-stats {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+	gap: var(--size-4-3);
+}
+
+.ww-card {
+	background: var(--background-secondary);
+	border-radius: var(--radius-l);
+	padding: var(--size-4-4) var(--size-4-5);
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-4-2);
+}
+
+.ww-stat-value {
+	font-size: 1.8em;
+	font-weight: var(--font-bold);
+	line-height: 1.1;
+	color: var(--text-normal);
+}
+
+.ww-stat-label,
+.ww-day-name,
+.ww-day-detail {
+	font-size: var(--font-ui-small);
+	color: var(--text-muted);
+}
+
+.ww-card-title {
+	font-weight: var(--font-semibold);
+	color: var(--text-normal);
+}
+
+.ww-days {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: var(--size-4-2);
+}
+
+.ww-day {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-3);
+}
+
+.ww-day.is-best .ww-day-name {
+	color: var(--text-normal);
+	font-weight: var(--font-semibold);
+}
+
+.ww-bar {
+	height: 8px;
+	border-radius: 4px;
+	background: var(--background-modifier-border);
+}
+
+.ww-level-1 { background: color-mix(in srgb, var(--interactive-accent) 30%, transparent); }
+.ww-level-2 { background: color-mix(in srgb, var(--interactive-accent) 50%, transparent); }
+.ww-level-3 { background: color-mix(in srgb, var(--interactive-accent) 75%, transparent); }
+.ww-level-4 { background: var(--interactive-accent); }
+
+.ww-list {
+	margin: 0;
+	padding-left: 1.2em;
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-2);
+}
+
+.ww-more {
+	font-size: var(--font-ui-small);
+}
+
+.ww-highlight {
+	background: color-mix(in srgb, var(--interactive-accent) 12%, var(--background-primary));
+}
+
+.ww-highlight .ww-card-title {
+	color: var(--text-accent);
+}
+
+/* Phones and narrow panes: one column, days wrap to two rows. */
+@media (max-width: 560px) {
+	.ww-page {
+		padding: var(--size-4-5) var(--size-4-4);
+	}
+	.ww-stats {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.ww-days {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+	.ww-nav {
+		width: 100%;
+	}
+	.ww-nav .ww-btn {
+		flex: 1 1 auto;
+	}
+}
+
+/* Friday nudge: a dot on the ribbon icon until the wrap is opened, and the notice's buttons. */
+.ww-ribbon.ww-has-wrap {
+	position: relative;
+}
+
+.ww-ribbon.ww-has-wrap::after {
+	content: "";
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+	background: var(--interactive-accent);
+}
+
+.ww-notice {
+	display: flex;
+	flex-direction: column;
+	gap: var(--size-2-3);
+}
+
+.ww-notice-title {
+	font-weight: var(--font-semibold);
+}
+
+.ww-notice-actions {
+	display: flex;
+	gap: var(--size-2-3);
+	margin-top: var(--size-2-2);
+}
+
+.ww-notice-actions button {
+	min-height: 36px;
+}
+
+.ww-source {
+	font-size: var(--font-ui-smaller);
+	color: var(--text-faint);
+}
+
+/* A lighter week's kind line: calm, not celebratory. */
+.ww-kind {
+	background: color-mix(in srgb, var(--color-green) 12%, var(--background-primary));
+}
+
+.ww-kind .ww-card-title {
+	color: var(--text-normal);
+}
+
+.ww-kind-lines {
+	width: 100%;
+	min-width: 260px;
+}

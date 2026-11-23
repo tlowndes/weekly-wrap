@@ -1,0 +1,49 @@
+/* Approximation of Obsidian's default dark theme variables, for screenshots only. */
+body {
+	margin: 0;
+	--background-primary: #1e1e1e;
+	--background-secondary: #262626;
+	--background-modifier-border: #363636;
+	--text-normal: #dadada;
+	--text-muted: #a3a3a3;
+	--text-faint: #8a8a8a;
+	--text-accent: #a68af9;
+	--interactive-accent: #8a5cf5;
+	--color-green: #44cf6e;
+	--font-monospace: "JetBrains Mono", ui-monospace, monospace;
+	--font-ui-small: 13px;
+	--font-ui-smaller: 12px;
+	--font-bold: 700;
+	--font-semibold: 600;
+	--radius-l: 12px;
+	--size-2-2: 4px;
+	--size-2-3: 6px;
+	--size-4-2: 8px;
+	--size-4-3: 12px;
+	--size-4-4: 16px;
+	--size-4-5: 20px;
+	--size-4-6: 24px;
+	--size-4-8: 32px;
+	background: var(--background-primary);
+	color: var(--text-normal);
+	font: 15px/1.5 Inter, -apple-system, "Segoe UI", sans-serif;
+}
+button {
+	font: inherit;
+	font-size: 13px;
+	border-radius: 6px;
+	border: 0;
+	background: #363636;
+	color: var(--text-normal);
+	padding: 0 14px;
+}
+button.mod-cta {
+	background: var(--interactive-accent);
+	color: #fff;
+}
+button:disabled {
+	opacity: 0.5;
+}
+a {
+	color: var(--text-accent);
+}
